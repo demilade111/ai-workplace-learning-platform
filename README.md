@@ -9,7 +9,7 @@ This is an npm-workspaces monorepo:
 - `backend/` — API server (Node.js, Express, TypeScript)
 - `frontend/` — web app (React, Vite, TypeScript)
 - `worker/` — background worker (document/knowledge processing, embeddings, AI generation)
-- `packages/shared/` — types and schemas shared between `backend` and `worker`
+- `shared/` — types and schemas shared between `backend` and `worker` only (not `frontend` — the HTTP API boundary is the frontend's contract, not shared TypeScript)
 
 ## Development
 
