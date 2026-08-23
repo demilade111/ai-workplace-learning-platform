@@ -1,0 +1,10 @@
+{
+  "name": "ai-workplace-learning-platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "worker",
+    "packages/*"
+  ]
+}
