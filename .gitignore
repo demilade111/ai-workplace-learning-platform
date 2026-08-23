@@ -12,7 +12,7 @@ dist/
 build/
 
 # Generated code
-src/generated/prisma
+**/src/generated/prisma
 
 # Logs
 *.log
