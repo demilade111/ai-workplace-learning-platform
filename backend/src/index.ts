@@ -4,6 +4,7 @@ import { pinoHttp } from "pino-http";
 import "dotenv/config";
 import { prisma } from "./db/prisma.js";
 import { logger } from "./lib/logger.js";
+import { authRouter } from "./modules/auth/routes/auth.routes.js";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -11,6 +12,8 @@ const port = process.env.PORT ?? 3000;
 app.use(cors());
 app.use(express.json());
 app.use(pinoHttp({ logger }));
+
+app.use("/auth", authRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

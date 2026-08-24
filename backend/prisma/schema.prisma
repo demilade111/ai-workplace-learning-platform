@@ -8,3 +8,47 @@ datasource db {
   provider   = "postgresql"
   extensions = [vector]
 }
+
+enum MembershipRole {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships OrganizationMembership[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships  OrganizationMembership[]
+
+  @@map("users")
+}
+
+model OrganizationMembership {
+  id             String         @id @default(uuid())
+  userId         String
+  organizationId String
+  role           MembershipRole
+  createdAt      DateTime       @default(now())
+
+  user           User           @relation(fields: [userId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+  @@map("organization_memberships")
+}
