@@ -1,6 +1,13 @@
 import type { Request, Response } from "express";
 import { registerRequestSchema, loginRequestSchema } from "../dto/auth.dto.js";
-import { register, login, logout, EmailAlreadyRegisteredError, InvalidCredentialsError } from "../service/auth.service.js";
+import {
+  register,
+  login,
+  logout,
+  getMe,
+  EmailAlreadyRegisteredError,
+  InvalidCredentialsError,
+} from "../service/auth.service.js";
 
 export async function registerController(req: Request, res: Response) {
   const parsed = registerRequestSchema.safeParse(req.body);
@@ -58,4 +65,9 @@ export async function logoutController(req: Request, res: Response) {
   } catch {
     res.status(401).json({ error: "Invalid access token" });
   }
+}
+
+export async function meController(req: Request, res: Response) {
+  const result = await getMe(req.user!.userId);
+  res.status(200).json(result);
 }

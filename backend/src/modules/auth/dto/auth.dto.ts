@@ -28,3 +28,9 @@ export type LoginResponseDto = {
   role: MembershipRole;
   accessToken: string;
 };
+
+export type MeResponseDto = {
+  user: UserResponseDto;
+  organization: Pick<Organization, "id" | "name">;
+  role: MembershipRole;
+};
