@@ -68,6 +68,14 @@ export async function logoutController(req: Request, res: Response) {
 }
 
 export async function meController(req: Request, res: Response) {
-  const result = await getMe(req.user!.userId);
-  res.status(200).json(result);
+  try {
+    const result = await getMe(req.user!.userId);
+    res.status(200).json(result);
+  } catch (err) {
+    if (err instanceof InvalidCredentialsError) {
+      res.status(401).json({ error: "User no longer exists" });
+      return;
+    }
+    throw err;
+  }
 }
