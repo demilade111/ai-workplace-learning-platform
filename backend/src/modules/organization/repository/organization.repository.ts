@@ -1,3 +1,4 @@
+import { prisma } from "../../../db/prisma.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
 import type { MembershipRole, Organization, OrganizationMembership } from "../types/organization.types.js";
 
@@ -13,4 +14,13 @@ export async function createMembership(
   tx: Prisma.TransactionClient,
 ): Promise<OrganizationMembership> {
   return tx.organizationMembership.create({ data });
+}
+
+export async function findMembershipByUserId(
+  userId: string,
+): Promise<(OrganizationMembership & { organization: Organization }) | null> {
+  return prisma.organizationMembership.findFirst({
+    where: { userId },
+    include: { organization: true },
+  });
 }
