@@ -1,27 +1,34 @@
+type ErrorStatusCode = 401 | 403 | 404 | 409;
+
 export class AppError extends Error {
   constructor(
     message: string,
-    public readonly statusCode: number,
+    public readonly statusCode: ErrorStatusCode,
   ) {
     super(message);
     this.name = "AppError";
   }
 }
 
-function makeError(statusCode: number) {
+function makeError(statusCode: ErrorStatusCode) {
   return (message: string) => new AppError(message, statusCode);
 }
 
+const asUnauthorized = makeError(401);
+const asForbidden = makeError(403);
+const asNotFound = makeError(404);
+const asConflict = makeError(409);
+
 export const Errors = {
-  missingToken: () => makeError(401)("Missing access token"),
-  invalidToken: () => makeError(401)("Invalid or expired access token"),
-  tokenRevoked: () => makeError(401)("Token has been revoked"),
-  invalidCredentials: () => makeError(401)("Invalid email or password"),
-  userNotFound: () => makeError(401)("User no longer exists"),
-  invitationNotFound: () => makeError(404)("Invitation not found"),
-  invitationAlreadyAccepted: () => makeError(409)("This invitation has already been accepted"),
-  invitationExpired: () => makeError(409)("This invitation has expired"),
-  emailAlreadyRegistered: (email: string) => makeError(409)(`Email already registered: ${email}`),
-  emailAlreadyHasAccount: (email: string) => makeError(409)(`An account already exists for ${email}`),
-  forbidden: (message: string) => makeError(403)(message),
+  missingToken: () => asUnauthorized("Missing access token"),
+  invalidToken: () => asUnauthorized("Invalid or expired access token"),
+  tokenRevoked: () => asUnauthorized("Token has been revoked"),
+  invalidCredentials: () => asUnauthorized("Invalid email or password"),
+  userNotFound: () => asUnauthorized("User no longer exists"),
+  invitationNotFound: () => asNotFound("Invitation not found"),
+  invitationAlreadyAccepted: () => asConflict("This invitation has already been accepted"),
+  invitationExpired: () => asConflict("This invitation has expired"),
+  emailAlreadyRegistered: (email: string) => asConflict(`Email already registered: ${email}`),
+  emailAlreadyHasAccount: (email: string) => asConflict(`An account already exists for ${email}`),
+  forbidden: (message: string) => asForbidden(message),
 };
