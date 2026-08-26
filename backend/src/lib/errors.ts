@@ -4,30 +4,24 @@ export class AppError extends Error {
     public readonly statusCode: number,
   ) {
     super(message);
-    this.name = this.constructor.name;
+    this.name = "AppError";
   }
 }
 
-export class MissingTokenError extends AppError {
-  constructor() {
-    super("Missing access token", 401);
-  }
+function makeError(statusCode: number) {
+  return (message: string) => new AppError(message, statusCode);
 }
 
-export class InvalidTokenError extends AppError {
-  constructor() {
-    super("Invalid or expired access token", 401);
-  }
-}
-
-export class TokenRevokedError extends AppError {
-  constructor() {
-    super("Token has been revoked", 401);
-  }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message = "Forbidden") {
-    super(message, 403);
-  }
-}
+export const Errors = {
+  missingToken: () => makeError(401)("Missing access token"),
+  invalidToken: () => makeError(401)("Invalid or expired access token"),
+  tokenRevoked: () => makeError(401)("Token has been revoked"),
+  invalidCredentials: () => makeError(401)("Invalid email or password"),
+  userNotFound: () => makeError(401)("User no longer exists"),
+  invitationNotFound: () => makeError(404)("Invitation not found"),
+  invitationAlreadyAccepted: () => makeError(409)("This invitation has already been accepted"),
+  invitationExpired: () => makeError(409)("This invitation has expired"),
+  emailAlreadyRegistered: (email: string) => makeError(409)(`Email already registered: ${email}`),
+  emailAlreadyHasAccount: (email: string) => makeError(409)(`An account already exists for ${email}`),
+  forbidden: (message: string) => makeError(403)(message),
+};

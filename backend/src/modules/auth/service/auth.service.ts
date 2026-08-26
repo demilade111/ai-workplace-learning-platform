@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../../../db/prisma.js";
 import { signAccessToken, verifyAccessToken } from "../../../lib/jwt.js";
 import { revokeToken } from "../../../lib/token-revocation.js";
-import { AppError, InvalidTokenError } from "../../../lib/errors.js";
+import { Errors } from "../../../lib/errors.js";
 import { findUserByEmail, findUserById, createUser } from "../../user/repository/user.repository.js";
 import { toUserResponseDto } from "../../user/dto/user.dto.js";
 import {
@@ -18,28 +18,10 @@ import type {
   MeResponseDto,
 } from "../dto/auth.dto.js";
 
-export class EmailAlreadyRegisteredError extends AppError {
-  constructor(public readonly email: string) {
-    super(`Email already registered: ${email}`, 409);
-  }
-}
-
-export class InvalidCredentialsError extends AppError {
-  constructor() {
-    super("Invalid email or password", 401);
-  }
-}
-
-export class UserNotFoundError extends AppError {
-  constructor() {
-    super("User no longer exists", 401);
-  }
-}
-
 export async function register(data: RegisterRequestDto): Promise<RegisterResponseDto> {
   const existing = await findUserByEmail(data.email);
   if (existing) {
-    throw new EmailAlreadyRegisteredError(data.email);
+    throw Errors.emailAlreadyRegistered(data.email);
   }
 
   const passwordHash: string = await bcrypt.hash(data.password, 10);
@@ -61,17 +43,17 @@ export async function register(data: RegisterRequestDto): Promise<RegisterRespon
 export async function login(data: LoginRequestDto): Promise<LoginResponseDto> {
   const user = await findUserByEmail(data.email);
   if (!user) {
-    throw new InvalidCredentialsError();
+    throw Errors.invalidCredentials();
   }
 
   const passwordMatches = await bcrypt.compare(data.password, user.passwordHash);
   if (!passwordMatches) {
-    throw new InvalidCredentialsError();
+    throw Errors.invalidCredentials();
   }
 
   const membership = await findMembershipByUserId(user.id);
   if (!membership) {
-    throw new InvalidCredentialsError();
+    throw Errors.invalidCredentials();
   }
 
   const accessToken = signAccessToken({
@@ -93,7 +75,7 @@ export async function logout(accessToken: string): Promise<void> {
   try {
     decoded = verifyAccessToken(accessToken);
   } catch {
-    throw new InvalidTokenError();
+    throw Errors.invalidToken();
   }
   await revokeToken(decoded.jti, decoded.exp);
 }
@@ -101,12 +83,12 @@ export async function logout(accessToken: string): Promise<void> {
 export async function getMe(userId: string): Promise<MeResponseDto> {
   const user = await findUserById(userId);
   if (!user) {
-    throw new UserNotFoundError();
+    throw Errors.userNotFound();
   }
 
   const membership = await findMembershipByUserId(user.id);
   if (!membership) {
-    throw new UserNotFoundError();
+    throw Errors.userNotFound();
   }
 
   return {

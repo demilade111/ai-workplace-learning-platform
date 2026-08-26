@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { registerRequestSchema, loginRequestSchema } from "../dto/auth.dto.js";
 import { register, login, logout, getMe } from "../service/auth.service.js";
-import { MissingTokenError } from "../../../lib/errors.js";
+import { Errors } from "../../../lib/errors.js";
 
 export async function registerController(req: Request, res: Response) {
   const parsed = registerRequestSchema.safeParse(req.body);
@@ -32,7 +32,7 @@ export async function logoutController(req: Request, res: Response) {
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : undefined;
 
   if (!token) {
-    throw new MissingTokenError();
+    throw Errors.missingToken();
   }
 
   await logout(token);
