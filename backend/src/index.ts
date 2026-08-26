@@ -5,6 +5,7 @@ import "dotenv/config";
 import { prisma } from "./db/prisma.js";
 import { logger } from "./lib/logger.js";
 import { authRouter } from "./modules/auth/routes/auth.routes.js";
+import { invitationRouter } from "./modules/invitation/routes/invitation.routes.js";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(pinoHttp({ logger }));
 
 app.use("/auth", authRouter);
+app.use("/invitations", invitationRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
