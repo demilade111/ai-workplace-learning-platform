@@ -1,13 +1,7 @@
 import type { Request, Response } from "express";
 import { registerRequestSchema, loginRequestSchema } from "../dto/auth.dto.js";
-import {
-  register,
-  login,
-  logout,
-  getMe,
-  EmailAlreadyRegisteredError,
-  InvalidCredentialsError,
-} from "../service/auth.service.js";
+import { register, login, logout, getMe } from "../service/auth.service.js";
+import { MissingTokenError } from "../../../lib/errors.js";
 
 export async function registerController(req: Request, res: Response) {
   const parsed = registerRequestSchema.safeParse(req.body);
@@ -16,17 +10,9 @@ export async function registerController(req: Request, res: Response) {
     return;
   }
 
-  try {
-    const result = await register(parsed.data);
-    req.log.info({ userId: result.user.id, organizationId: result.organization.id }, "user_registered");
-    res.status(201).json(result);
-  } catch (err) {
-    if (err instanceof EmailAlreadyRegisteredError) {
-      res.status(409).json({ error: "Email already registered" });
-      return;
-    }
-    throw err;
-  }
+  const result = await register(parsed.data);
+  req.log.info({ userId: result.user.id, organizationId: result.organization.id }, "user_registered");
+  res.status(201).json(result);
 }
 
 export async function loginController(req: Request, res: Response) {
@@ -36,17 +22,9 @@ export async function loginController(req: Request, res: Response) {
     return;
   }
 
-  try {
-    const result = await login(parsed.data);
-    req.log.info({ userId: result.user.id, organizationId: result.organization.id }, "user_logged_in");
-    res.status(200).json(result);
-  } catch (err) {
-    if (err instanceof InvalidCredentialsError) {
-      res.status(401).json({ error: "Invalid email or password" });
-      return;
-    }
-    throw err;
-  }
+  const result = await login(parsed.data);
+  req.log.info({ userId: result.user.id, organizationId: result.organization.id }, "user_logged_in");
+  res.status(200).json(result);
 }
 
 export async function logoutController(req: Request, res: Response) {
@@ -54,28 +32,15 @@ export async function logoutController(req: Request, res: Response) {
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : undefined;
 
   if (!token) {
-    res.status(401).json({ error: "Missing access token" });
-    return;
+    throw new MissingTokenError();
   }
 
-  try {
-    await logout(token);
-    req.log.info({}, "user_logged_out");
-    res.status(204).send();
-  } catch {
-    res.status(401).json({ error: "Invalid access token" });
-  }
+  await logout(token);
+  req.log.info({}, "user_logged_out");
+  res.status(204).send();
 }
 
 export async function meController(req: Request, res: Response) {
-  try {
-    const result = await getMe(req.user!.userId);
-    res.status(200).json(result);
-  } catch (err) {
-    if (err instanceof InvalidCredentialsError) {
-      res.status(401).json({ error: "User no longer exists" });
-      return;
-    }
-    throw err;
-  }
+  const result = await getMe(req.user!.userId);
+  res.status(200).json(result);
 }

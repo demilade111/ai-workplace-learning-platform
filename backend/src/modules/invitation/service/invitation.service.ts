@@ -10,6 +10,7 @@ import {
 import { findUserByEmail, createUser } from "../../user/repository/user.repository.js";
 import { toUserResponseDto } from "../../user/dto/user.dto.js";
 import { createMembership } from "../../organization/repository/organization.repository.js";
+import { AppError } from "../../../lib/errors.js";
 import type {
   CreateInvitationRequestDto,
   CreateInvitationResponseDto,
@@ -18,27 +19,27 @@ import type {
 
 const INVITATION_EXPIRY_DAYS = 7;
 
-export class InvitationNotFoundError extends Error {
+export class InvitationNotFoundError extends AppError {
   constructor() {
-    super("Invitation not found");
+    super("Invitation not found", 404);
   }
 }
 
-export class InvitationAlreadyAcceptedError extends Error {
+export class InvitationAlreadyAcceptedError extends AppError {
   constructor() {
-    super("This invitation has already been accepted");
+    super("This invitation has already been accepted", 409);
   }
 }
 
-export class InvitationExpiredError extends Error {
+export class InvitationExpiredError extends AppError {
   constructor() {
-    super("This invitation has expired");
+    super("This invitation has expired", 409);
   }
 }
 
-export class EmailAlreadyHasAccountError extends Error {
+export class EmailAlreadyHasAccountError extends AppError {
   constructor(public readonly email: string) {
-    super(`An account already exists for ${email}`);
+    super(`An account already exists for ${email}`, 409);
   }
 }
 

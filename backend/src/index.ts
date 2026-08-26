@@ -6,6 +6,7 @@ import { prisma } from "./db/prisma.js";
 import { logger } from "./lib/logger.js";
 import { authRouter } from "./modules/auth/routes/auth.routes.js";
 import { invitationRouter } from "./modules/invitation/routes/invitation.routes.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 const port = process.env.PORT ?? 3000;
@@ -30,6 +31,8 @@ app.get("/ready", async (req, res) => {
     res.status(503).json({ status: "unavailable" });
   }
 });
+
+app.use(errorHandler);
 
 app.listen(port, () => {
   logger.info({ port }, "backend_started");

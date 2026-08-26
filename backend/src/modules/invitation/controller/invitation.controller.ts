@@ -1,20 +1,13 @@
 import type { Request, Response } from "express";
 import { createInvitationRequestSchema, acceptInvitationRequestSchema } from "../dto/invitation.dto.js";
-import {
-  createInvitationForOrg,
-  acceptInvitation,
-  InvitationNotFoundError,
-  InvitationAlreadyAcceptedError,
-  InvitationExpiredError,
-  EmailAlreadyHasAccountError,
-} from "../service/invitation.service.js";
+import { createInvitationForOrg, acceptInvitation } from "../service/invitation.service.js";
+import { ForbiddenError } from "../../../lib/errors.js";
 
 export async function createInvitationController(req: Request, res: Response) {
   // TEMPORARY: inline role check. RBAC-002 will replace this with reusable
   // authorization middleware once real role/permission policies exist.
   if (req.user!.role !== "ADMIN") {
-    res.status(403).json({ error: "Only an organization admin can invite members" });
-    return;
+    throw new ForbiddenError("Only an organization admin can invite members");
   }
 
   const parsed = createInvitationRequestSchema.safeParse(req.body);
@@ -44,26 +37,10 @@ export async function acceptInvitationController(req: Request, res: Response) {
     return;
   }
 
-  try {
-    const result = await acceptInvitation(token, parsed.data.password);
-    req.log.info(
-      { userId: result.user.id, organizationId: result.organization.id },
-      "invitation_accepted",
-    );
-    res.status(201).json(result);
-  } catch (err) {
-    if (err instanceof InvitationNotFoundError) {
-      res.status(404).json({ error: err.message });
-      return;
-    }
-    if (err instanceof InvitationAlreadyAcceptedError || err instanceof InvitationExpiredError) {
-      res.status(409).json({ error: err.message });
-      return;
-    }
-    if (err instanceof EmailAlreadyHasAccountError) {
-      res.status(409).json({ error: err.message });
-      return;
-    }
-    throw err;
-  }
+  const result = await acceptInvitation(token, parsed.data.password);
+  req.log.info(
+    { userId: result.user.id, organizationId: result.organization.id },
+    "invitation_accepted",
+  );
+  res.status(201).json(result);
 }

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../../../db/prisma.js";
 import { signAccessToken, verifyAccessToken } from "../../../lib/jwt.js";
 import { revokeToken } from "../../../lib/token-revocation.js";
+import { AppError, InvalidTokenError } from "../../../lib/errors.js";
 import { findUserByEmail, findUserById, createUser } from "../../user/repository/user.repository.js";
 import { toUserResponseDto } from "../../user/dto/user.dto.js";
 import {
@@ -17,15 +18,21 @@ import type {
   MeResponseDto,
 } from "../dto/auth.dto.js";
 
-export class EmailAlreadyRegisteredError extends Error {
+export class EmailAlreadyRegisteredError extends AppError {
   constructor(public readonly email: string) {
-    super(`Email already registered: ${email}`);
+    super(`Email already registered: ${email}`, 409);
   }
 }
 
-export class InvalidCredentialsError extends Error {
+export class InvalidCredentialsError extends AppError {
   constructor() {
-    super("Invalid email or password");
+    super("Invalid email or password", 401);
+  }
+}
+
+export class UserNotFoundError extends AppError {
+  constructor() {
+    super("User no longer exists", 401);
   }
 }
 
@@ -35,7 +42,7 @@ export async function register(data: RegisterRequestDto): Promise<RegisterRespon
     throw new EmailAlreadyRegisteredError(data.email);
   }
 
-  const passwordHash:string = await bcrypt.hash(data.password, 10);
+  const passwordHash: string = await bcrypt.hash(data.password, 10);
 
   const { user, organization } = await prisma.$transaction(async (tx) => {
     const organization = await createOrganization({ name: data.organizationName }, tx);
@@ -82,19 +89,24 @@ export async function login(data: LoginRequestDto): Promise<LoginResponseDto> {
 }
 
 export async function logout(accessToken: string): Promise<void> {
-  const decoded = verifyAccessToken(accessToken);
+  let decoded;
+  try {
+    decoded = verifyAccessToken(accessToken);
+  } catch {
+    throw new InvalidTokenError();
+  }
   await revokeToken(decoded.jti, decoded.exp);
 }
 
 export async function getMe(userId: string): Promise<MeResponseDto> {
   const user = await findUserById(userId);
   if (!user) {
-    throw new InvalidCredentialsError();
+    throw new UserNotFoundError();
   }
 
   const membership = await findMembershipByUserId(user.id);
   if (!membership) {
-    throw new InvalidCredentialsError();
+    throw new UserNotFoundError();
   }
 
   return {
