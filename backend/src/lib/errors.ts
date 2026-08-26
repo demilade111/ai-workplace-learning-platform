@@ -31,4 +31,5 @@ export const Errors = {
   emailAlreadyRegistered: (email: string) => asConflict(`Email already registered: ${email}`),
   emailAlreadyHasAccount: (email: string) => asConflict(`An account already exists for ${email}`),
   forbidden: (message: string) => asForbidden(message),
+  notFound: (message: string) => asNotFound(message),
 };

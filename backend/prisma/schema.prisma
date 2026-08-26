@@ -15,6 +15,14 @@ enum MembershipRole {
   EMPLOYEE
 }
 
+enum DocumentStatus {
+  UPLOADED
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
 model Organization {
   id          String   @id @default(uuid())
   name        String
@@ -23,6 +31,7 @@ model Organization {
 
   memberships OrganizationMembership[]
   invitations Invitation[]
+  documents   Document[]
 
   @@map("organizations")
 }
@@ -34,8 +43,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships     OrganizationMembership[]
-  invitationsSent Invitation[]
+  memberships       OrganizationMembership[]
+  invitationsSent   Invitation[]
+  documentsUploaded Document[]
 
   @@map("users")
 }
@@ -71,4 +81,22 @@ model Invitation {
 
   @@index([organizationId])
   @@map("invitations")
+}
+
+model Document {
+  id             String         @id @default(uuid())
+  organizationId String
+  uploadedById   String
+  filename       String
+  storageKey     String
+  mimeType       String
+  size           Int
+  status         DocumentStatus @default(UPLOADED)
+  createdAt      DateTime       @default(now())
+
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  uploadedBy     User           @relation(fields: [uploadedById], references: [id])
+
+  @@index([organizationId])
+  @@map("documents")
 }
