@@ -1,6 +1,12 @@
 import type { Request, Response } from "express";
 import { presignRequestSchema, confirmDocumentRequestSchema } from "../dto/document.dto.js";
-import { createPresignedUpload, confirmDocument } from "../service/document.service.js";
+import {
+  createPresignedUpload,
+  confirmDocument,
+  listDocumentsForOrg,
+  getDocumentForOrg,
+} from "../service/document.service.js";
+import { Errors } from "../../../lib/errors.js";
 
 export async function presignController(req: Request, res: Response) {
   const parsed = presignRequestSchema.safeParse(req.body);
@@ -26,4 +32,19 @@ export async function confirmDocumentController(req: Request, res: Response) {
     "document_uploaded",
   );
   res.status(201).json(result);
+}
+
+export async function listDocumentsController(req: Request, res: Response) {
+  const result = await listDocumentsForOrg(req.user!.organizationId);
+  res.status(200).json(result);
+}
+
+export async function getDocumentController(req: Request, res: Response) {
+  const documentId = req.params.id;
+  if (typeof documentId !== "string") {
+    throw Errors.notFound("Document not found");
+  }
+
+  const result = await getDocumentForOrg(req.user!.organizationId, documentId);
+  res.status(200).json(result);
 }

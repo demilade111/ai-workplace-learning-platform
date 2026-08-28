@@ -11,3 +11,14 @@ export async function createDocument(data: {
 }): Promise<Document> {
   return prisma.document.create({ data });
 }
+
+export async function findDocumentsByOrganization(organizationId: string): Promise<Document[]> {
+  return prisma.document.findMany({
+    where: { organizationId },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+export async function findDocumentById(id: string): Promise<Document | null> {
+  return prisma.document.findUnique({ where: { id } });
+}

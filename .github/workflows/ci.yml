@@ -47,3 +47,7 @@ jobs:
       - name: Run migrations
         working-directory: backend
         run: npx prisma migrate deploy
+
+      - name: Run tests
+        working-directory: backend
+        run: npm test

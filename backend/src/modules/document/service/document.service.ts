@@ -3,7 +3,7 @@ import { PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3, S3_BUCKET } from "../../../lib/s3.js";
 import { Errors } from "../../../lib/errors.js";
-import { createDocument } from "../repository/document.repository.js";
+import { createDocument, findDocumentsByOrganization, findDocumentById } from "../repository/document.repository.js";
 import { toDocumentResponseDto } from "../dto/document.dto.js";
 import type {
   PresignRequestDto,
@@ -61,5 +61,21 @@ export async function confirmDocument(
     size: data.size,
   });
 
+  return toDocumentResponseDto(document);
+}
+
+export async function listDocumentsForOrg(organizationId: string): Promise<DocumentResponseDto[]> {
+  const documents = await findDocumentsByOrganization(organizationId);
+  return documents.map(toDocumentResponseDto);
+}
+
+export async function getDocumentForOrg(
+  organizationId: string,
+  documentId: string,
+): Promise<DocumentResponseDto> {
+  const document = await findDocumentById(documentId);
+  if (!document || document.organizationId !== organizationId) {
+    throw Errors.notFound("Document not found");
+  }
   return toDocumentResponseDto(document);
 }
