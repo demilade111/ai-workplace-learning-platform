@@ -1,15 +1,8 @@
 import type { Request, Response } from "express";
 import { createInvitationRequestSchema, acceptInvitationRequestSchema } from "../dto/invitation.dto.js";
 import { createInvitationForOrg, acceptInvitation } from "../service/invitation.service.js";
-import { Errors } from "../../../lib/errors.js";
 
 export async function createInvitationController(req: Request, res: Response) {
-  // TEMPORARY: inline role check. RBAC-002 will replace this with reusable
-  // authorization middleware once real role/permission policies exist.
-  if (req.user!.role !== "ADMIN") {
-    throw Errors.forbidden("Only an organization admin can invite members");
-  }
-
   const parsed = createInvitationRequestSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.flatten() });
