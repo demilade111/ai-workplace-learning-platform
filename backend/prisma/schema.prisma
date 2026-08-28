@@ -32,6 +32,7 @@ model Organization {
   memberships OrganizationMembership[]
   invitations Invitation[]
   documents   Document[]
+  departments Department[]
 
   @@map("organizations")
 }
@@ -43,9 +44,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships       OrganizationMembership[]
-  invitationsSent   Invitation[]
-  documentsUploaded Document[]
+  memberships          OrganizationMembership[]
+  invitationsSent      Invitation[]
+  documentsUploaded    Document[]
+  departmentMemberships DepartmentMembership[]
 
   @@map("users")
 }
@@ -99,4 +101,31 @@ model Document {
 
   @@index([organizationId])
   @@map("documents")
+}
+
+model Department {
+  id             String   @id @default(uuid())
+  name           String
+  organizationId String
+  createdAt      DateTime @default(now())
+
+  organization   Organization           @relation(fields: [organizationId], references: [id])
+  memberships    DepartmentMembership[]
+
+  @@index([organizationId])
+  @@map("departments")
+}
+
+model DepartmentMembership {
+  id           String   @id @default(uuid())
+  userId       String
+  departmentId String
+  createdAt    DateTime @default(now())
+
+  user         User       @relation(fields: [userId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  @@unique([userId, departmentId])
+  @@index([departmentId])
+  @@map("department_memberships")
 }

@@ -24,3 +24,12 @@ export async function findMembershipByUserId(
     include: { organization: true },
   });
 }
+
+export async function findMembership(
+  userId: string,
+  organizationId: string,
+): Promise<OrganizationMembership | null> {
+  return prisma.organizationMembership.findUnique({
+    where: { userId_organizationId: { userId, organizationId } },
+  });
+}

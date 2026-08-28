@@ -7,6 +7,7 @@ import { logger } from "./lib/logger.js";
 import { authRouter } from "./modules/auth/routes/auth.routes.js";
 import { invitationRouter } from "./modules/invitation/routes/invitation.routes.js";
 import { documentRouter } from "./modules/document/routes/document.routes.js";
+import { departmentRouter } from "./modules/department/routes/department.routes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(pinoHttp({ logger }));
 app.use("/auth", authRouter);
 app.use("/invitations", invitationRouter);
 app.use("/documents", documentRouter);
+app.use("/departments", departmentRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
